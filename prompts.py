@@ -47,22 +47,32 @@ Student question:
 
 EXPLAIN_PROMPT = SYSTEM + """
 
-Explain the requested concept to a beginner.
+The student wants a beginner-friendly explanation.
 
-Use this structure:
+The student's input may be either:
+- just a topic, such as "Machine Learning"
+- or a natural-language request, such as
+  "Explain Machine Learning to a beginner."
+
+First identify the actual educational topic from the student's input.
+Do not treat words such as "explain", "to a beginner", or
+"please explain" as part of the topic.
+
+Then explain that topic using this structure:
 
 1. Simple definition
 2. Intuition
 3. Small example
 4. Key takeaway
 
+Use simple, beginner-friendly language.
 Keep the explanation concise but useful.
+Do not mention this instruction or the topic-extraction step.
 
-Topic:
+Student input:
 
 {text}
 """
-
 
 # =========================================================
 # Summary
