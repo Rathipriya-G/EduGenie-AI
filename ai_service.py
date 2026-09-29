@@ -24,8 +24,7 @@ def get_client():
 
     if not settings.gemini_api_key:
         raise AIServiceError(
-            "GEMINI_API_KEY is not configured. "
-            "Add it to your .env file."
+            "GEMINI_API_KEY is not configured."
         )
 
     if _client is None:
@@ -45,10 +44,6 @@ def get_client():
 
 
 def _is_retryable_error(exc: Exception) -> bool:
-    """
-    Return True for temporary Gemini availability/server errors.
-    """
-
     message = str(exc).upper()
 
     retryable_codes = [
@@ -60,66 +55,105 @@ def _is_retryable_error(exc: Exception) -> bool:
         "BAD_GATEWAY",
         "504",
         "DEADLINE_EXCEEDED",
+        "429",
+        "RESOURCE_EXHAUSTED",
     ]
 
     return any(code in message for code in retryable_codes)
 
 
+def _get_models(settings):
+    """
+    Primary model is tried first.
+    If it is temporarily unavailable, fallback models are tried.
+    """
+
+    models = [
+        settings.gemini_model,
+        "gemini-3.8-flash",
+        "gemini-3-flash",
+    ]
+
+    # Remove duplicates while preserving order
+    return list(dict.fromkeys(models))
+
+
 def generate_text(prompt: str) -> str:
+
     settings = get_settings()
     client = get_client()
 
-    max_attempts = 4
+    models = _get_models(settings)
 
-    for attempt in range(max_attempts):
-        try:
-            from google.genai import types
+    last_error = None
 
-            response = client.models.generate_content(
-                model=settings.gemini_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=settings.gemini_temperature,
-                    max_output_tokens=settings.gemini_max_output_tokens,
-                ),
-            )
+    for model in models:
 
-            text = getattr(response, "text", None)
+        for attempt in range(3):
 
-            if not text:
-                raise AIServiceError(
-                    "Gemini returned an empty response."
+            try:
+
+                from google.genai import types
+
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        max_output_tokens=settings.gemini_max_output_tokens,
+                    ),
                 )
 
-            return text.strip()
+                text = getattr(response, "text", None)
 
-        except AIServiceError:
-            raise
-
-        except Exception as exc:
-
-            if _is_retryable_error(exc):
-
-                if attempt < max_attempts - 1:
-                    wait_seconds = 2 ** attempt
-
-                    print(
-                        f"Gemini temporarily unavailable. "
-                        f"Retrying in {wait_seconds} seconds..."
+                if not text:
+                    raise AIServiceError(
+                        "Gemini returned an empty response."
                     )
 
-                    time.sleep(wait_seconds)
-                    continue
+                print(
+                    f"Gemini request succeeded using model: {model}"
+                )
+
+                return text.strip()
+
+            except AIServiceError:
+                raise
+
+            except Exception as exc:
+
+                last_error = exc
+
+                if _is_retryable_error(exc):
+
+                    if attempt < 2:
+
+                        wait_seconds = 2 ** attempt
+
+                        print(
+                            f"Gemini model {model} temporarily unavailable. "
+                            f"Retrying in {wait_seconds} seconds..."
+                        )
+
+                        time.sleep(wait_seconds)
+
+                        continue
+
+                    print(
+                        f"Model {model} unavailable after 3 attempts. "
+                        "Trying fallback model..."
+                    )
+
+                    break
 
                 raise AIServiceError(
-                    "Gemini is temporarily unavailable after "
-                    f"{max_attempts} attempts. "
-                    "Please try again later."
+                    f"Gemini request failed: {exc}"
                 ) from exc
 
-            raise AIServiceError(
-                f"Gemini request failed: {exc}"
-            ) from exc
+    raise AIServiceError(
+        "Gemini is temporarily unavailable. "
+        "EduGenie tried multiple Gemini models. "
+        "Please try again shortly."
+    ) from last_error
 
 
 def generate_structured(
@@ -130,57 +164,78 @@ def generate_structured(
     settings = get_settings()
     client = get_client()
 
-    max_attempts = 4
+    models = _get_models(settings)
 
-    for attempt in range(max_attempts):
+    last_error = None
 
-        try:
-            from google.genai import types
+    for model in models:
 
-            response = client.models.generate_content(
-                model=settings.gemini_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=settings.gemini_temperature,
-                    max_output_tokens=settings.gemini_max_output_tokens,
-                    response_mime_type="application/json",
-                    response_schema=response_model,
-                ),
-            )
+        for attempt in range(3):
 
-            text = getattr(response, "text", None)
+            try:
 
-            if not text:
-                raise AIServiceError(
-                    "Gemini returned an empty structured response."
+                from google.genai import types
+
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        max_output_tokens=settings.gemini_max_output_tokens,
+                        response_mime_type="application/json",
+                        response_schema=response_model,
+                    ),
                 )
 
-            return response_model.model_validate_json(text)
+                text = getattr(response, "text", None)
 
-        except AIServiceError:
-            raise
-
-        except Exception as exc:
-
-            if _is_retryable_error(exc):
-
-                if attempt < max_attempts - 1:
-                    wait_seconds = 2 ** attempt
-
-                    print(
-                        f"Gemini temporarily unavailable. "
-                        f"Retrying in {wait_seconds} seconds..."
+                if not text:
+                    raise AIServiceError(
+                        "Gemini returned an empty structured response."
                     )
 
-                    time.sleep(wait_seconds)
-                    continue
+                result = response_model.model_validate_json(text)
+
+                print(
+                    f"Structured Gemini request succeeded using model: {model}"
+                )
+
+                return result
+
+            except AIServiceError:
+                raise
+
+            except Exception as exc:
+
+                last_error = exc
+
+                if _is_retryable_error(exc):
+
+                    if attempt < 2:
+
+                        wait_seconds = 2 ** attempt
+
+                        print(
+                            f"Gemini model {model} temporarily unavailable. "
+                            f"Retrying in {wait_seconds} seconds..."
+                        )
+
+                        time.sleep(wait_seconds)
+
+                        continue
+
+                    print(
+                        f"Model {model} unavailable after 3 attempts. "
+                        "Trying fallback model..."
+                    )
+
+                    break
 
                 raise AIServiceError(
-                    "Gemini is temporarily unavailable after "
-                    f"{max_attempts} attempts. "
-                    "Please try again later."
+                    f"Structured Gemini request failed: {exc}"
                 ) from exc
 
-            raise AIServiceError(
-                f"Structured Gemini request failed: {exc}"
-            ) from exc
+    raise AIServiceError(
+        "Gemini is temporarily unavailable. "
+        "EduGenie tried multiple Gemini models. "
+        "Please try again shortly."
+    ) from last_error
