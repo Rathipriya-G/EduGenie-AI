@@ -71,7 +71,7 @@ def _get_models(settings):
     models = [
         settings.gemini_model,
         "gemini-3.8-flash",
-        "gemini-3-flash",
+    
     ]
 
     # Remove duplicates while preserving order
