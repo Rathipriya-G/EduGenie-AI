@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="EduGenie - Google Gemini Powered Learning Assistant"
+    >
+
+    <title>EduGenie - Learning Assistant</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='style.css') }}"
+    >
+</head>
+
+
+<body>
+
+<header class="hero">
+
+    <div class="container">
+
+        <div class="brand">
+            Edu<span>Genie</span>
+        </div>
+
+        <p class="eyebrow">
+            AI-POWERED LEARNING ASSISTANT
+        </p>
+
+        <h1>
+            Learn smarter.
+            Understand faster.
+        </h1>
+
+        <p class="hero-copy">
+            Ask questions, simplify difficult concepts,
+            summarize study material, generate quizzes,
+            and get personalized learning recommendations.
+        </p>
+
+    </div>
+
+</header>
+
+
+<main class="container app-shell">
+
+
+    <!-- =====================================================
+         ASK A QUESTION
+         ===================================================== -->
+
+    <section class="feature-card">
+
+        <h2>
+            Ask EduGenie a Question
+        </h2>
+
+        <p class="feature-description">
+            Ask any educational question and get a clear answer.
+        </p>
+
+        <label for="qaInput">
+            Your question
+        </label>
+
+        <textarea
+            id="qaInput"
+            rows="5"
+            placeholder="Example: Which is the largest ocean?"
+        ></textarea>
+
+        <button
+            type="button"
+            id="qaBtn"
+        >
+            Ask Question
+        </button>
+
+        <div
+            id="qaStatus"
+            class="status hidden"
+            aria-live="polite"
+        ></div>
+
+        <div
+            id="qaResult"
+            class="feature-result hidden"
+        ></div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         EXPLANATION
+         ===================================================== -->
+
+    <section class="feature-card">
+
+        <h2>
+            Need an Explanation?
+        </h2>
+
+        <p class="feature-description">
+            Enter a concept and EduGenie will explain it
+            in simple, beginner-friendly language.
+        </p>
+
+        <label for="explainInput">
+            Concept or topic
+        </label>
+
+        <textarea
+            id="explainInput"
+            rows="5"
+            placeholder="Example: Explain Machine Learning to a beginner."
+        ></textarea>
+
+        <button
+            type="button"
+            id="explainBtn"
+        >
+            Explain
+        </button>
+
+        <div
+            id="explainStatus"
+            class="status hidden"
+            aria-live="polite"
+        ></div>
+
+        <div
+            id="explainResult"
+            class="feature-result hidden"
+        ></div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         SUMMARY
+         ===================================================== -->
+
+    <section class="feature-card">
+
+        <h2>
+            Summarize a Paragraph
+        </h2>
+
+        <p class="feature-description">
+            Paste educational content and get a concise summary.
+        </p>
+
+        <label for="summaryInput">
+            Educational passage
+        </label>
+
+        <textarea
+            id="summaryInput"
+            rows="7"
+            placeholder="Paste the paragraph or study material here..."
+        ></textarea>
+
+        <button
+            type="button"
+            id="summaryBtn"
+        >
+            Summarize
+        </button>
+
+        <div
+            id="summaryStatus"
+            class="status hidden"
+            aria-live="polite"
+        ></div>
+
+        <div
+            id="summaryResult"
+            class="feature-result hidden"
+        ></div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         QUIZ
+         ===================================================== -->
+
+    <section class="feature-card">
+
+        <h2>
+            Generate a Quiz
+        </h2>
+
+        <p class="feature-description">
+            Enter a topic or passage and generate 3 multiple-choice questions.
+        </p>
+
+        <label for="quizInput">
+            Topic or study passage
+        </label>
+
+        <textarea
+            id="quizInput"
+            rows="7"
+            placeholder="Example: Python programming basics..."
+        ></textarea>
+
+        <button
+            type="button"
+            id="quizBtn"
+        >
+            Generate Quiz
+        </button>
+
+        <div
+            id="quizStatus"
+            class="status hidden"
+            aria-live="polite"
+        ></div>
+
+        <div
+            id="quizResult"
+            class="feature-result hidden"
+        ></div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         LEARNING RECOMMENDATIONS
+         ===================================================== -->
+
+    <section class="feature-card">
+
+        <h2>
+            Get Learning Recommendations
+        </h2>
+
+        <p class="feature-description">
+            Enter a topic and receive a structured learning path
+            from Beginner to Intermediate to Advanced.
+        </p>
+
+        <label for="learnInput">
+            Topic to learn
+        </label>
+
+        <textarea
+            id="learnInput"
+            rows="5"
+            placeholder="Example: SQL, Python, Machine Learning, Biology..."
+        ></textarea>
+
+        <button
+            type="button"
+            id="learnBtn"
+        >
+            Get Recommendations
+        </button>
+
+        <div
+            id="learnStatus"
+            class="status hidden"
+            aria-live="polite"
+        ></div>
+
+        <div
+            id="learnResult"
+            class="feature-result hidden"
+        ></div>
+
+    </section>
+
+
+</main>
+
+
+<footer>
+
+    <div class="container">
+
+        EduGenie &bull; Built with FastAPI + Google Gemini
+
+    </div>
+
+</footer>
+
+
+<script
+    src="{{ url_for('static', path='app.js') }}"
+></script>
+
+</body>
+
+</html>
